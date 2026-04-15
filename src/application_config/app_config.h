@@ -30,7 +30,7 @@
 #define RUUVI_NRF5_SDK15_ENABLED (1U)
 
 #ifndef APP_HEARTBEAT_OVERDUE_INTERVAL_MS
-#   define APP_HEARTBEAT_OVERDUE_INTERVAL_MS (5U * 60U * 1000U)
+#   define APP_HEARTBEAT_OVERDUE_INTERVAL_MS (1U * 60U * 1000U)
 #endif
 
 /** @brief If watchdog is not fed at this interval or faster, reboot */
@@ -345,7 +345,7 @@
 
 // ** Logging constants ** //
 #ifndef APP_LOG_INTERVAL_S
-#   define APP_LOG_INTERVAL_S (5U * 60U)
+#   define APP_LOG_INTERVAL_S (1U * 60U)
 #endif
 #ifndef APP_LOG_OVERFLOW
 #   define APP_LOG_OVERFLOW (true)

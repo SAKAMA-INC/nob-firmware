@@ -36,9 +36,10 @@
 #endif
 
 /** @brief Refresh sensor data at this interval.*/
-#ifndef APP_HEARTBEAT_INTERVAL_MS
-#   define APP_HEARTBEAT_INTERVAL_MS (APP_BLE_INTERVAL_MS * APP_NUM_REPEATS)
+#ifdef APP_HEARTBEAT_INTERVAL_MS
+#   undef APP_HEARTBEAT_INTERVAL_MS
 #endif
+#define APP_HEARTBEAT_INTERVAL_MS (60U * 1000U)
 
 /** @brief Resample battery voltage at this interval */
 #ifndef APP_BATTERY_SAMPLE_MS

@@ -224,6 +224,9 @@ rd_status_t app_log_process (const rd_sensor_data_t * const sample)
             .temperature_c = rd_sensor_data_parse (sample, RD_SENSOR_TEMP_FIELD),
             .humidity_rh = rd_sensor_data_parse (sample, RD_SENSOR_HUMI_FIELD),
             .pressure_pa = rd_sensor_data_parse (sample, RD_SENSOR_PRES_FIELD),
+            .acceleration_x_g = rd_sensor_data_parse (sample, RD_SENSOR_ACC_X_FIELD),
+            .acceleration_y_g = rd_sensor_data_parse (sample, RD_SENSOR_ACC_Y_FIELD),
+            .acceleration_z_g = rd_sensor_data_parse (sample, RD_SENSOR_ACC_Z_FIELD),
         };
 
         if (APP_LOG_MAX_SAMPLES > m_log_input_block.num_samples)
@@ -346,6 +349,9 @@ static rd_status_t app_log_read_populate (rd_sensor_data_t * const sample,
         rd_sensor_data_set (sample, RD_SENSOR_TEMP_FIELD, p_el->temperature_c);
         rd_sensor_data_set (sample, RD_SENSOR_HUMI_FIELD, p_el->humidity_rh);
         rd_sensor_data_set (sample, RD_SENSOR_PRES_FIELD, p_el->pressure_pa);
+        rd_sensor_data_set (sample, RD_SENSOR_ACC_X_FIELD, p_el->acceleration_x_g);
+        rd_sensor_data_set (sample, RD_SENSOR_ACC_Y_FIELD, p_el->acceleration_y_g);
+        rd_sensor_data_set (sample, RD_SENSOR_ACC_Z_FIELD, p_el->acceleration_z_g);
         sample->timestamp_ms = ( (uint64_t) (p_el->timestamp_s)) * 1000LLU;
         p_rs->element_idx++;
     }
