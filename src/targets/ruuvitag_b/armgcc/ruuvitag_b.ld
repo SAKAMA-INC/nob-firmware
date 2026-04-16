@@ -123,11 +123,11 @@ SECTIONS
     KEEP(*(SORT(.pwr_mgmt_data*)))
     PROVIDE(__stop_pwr_mgmt_data = .);
   } > FLASH
-  .storage_flash 0x60000 (NOLOAD) :
+  .storage_flash 0x48000 (NOLOAD) :
   {
     __start_storage_flash = .;
     KEEP(*(SORT(.storage_flash*)))
-    __stop_storage_flash = . + 0x15000;
+    __stop_storage_flash = . + 0x2D000;
   } > FLASH
 
 } INSERT AFTER .text

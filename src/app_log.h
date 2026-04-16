@@ -44,8 +44,9 @@ typedef struct
 {
     uint32_t timestamp_s;
     float temperature_c;
-    float humidity_rh;
-    float pressure_pa;
+    float acceleration_x_g;
+    float acceleration_y_g;
+    float acceleration_z_g;
 } app_log_element_t;
 
 typedef struct

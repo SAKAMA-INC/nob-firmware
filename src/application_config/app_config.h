@@ -1,8 +1,9 @@
 #ifndef APP_CONFIG_H
 #define APP_CONFIG_H
 
-/** @brief Send 1 advertisement per heartbeat for ~1.3s update interval. */
-#define APP_NUM_REPEATS 1
+/** @brief v88: 80-second heartbeat for history-log sampling. */
+#define APP_NUM_REPEATS 2
+#define APP_HEARTBEAT_INTERVAL_MS (80U * 1000U)
 
 #include "application_modes.h"
 #include "ruuvi_boards.h"
@@ -33,14 +34,11 @@
 /** @brief enable nRF15 SDK implementation of drivers */
 #define RUUVI_NRF5_SDK15_ENABLED (1U)
 
-#ifndef APP_HEARTBEAT_OVERDUE_INTERVAL_MS
-#   define APP_HEARTBEAT_OVERDUE_INTERVAL_MS (5U * 60U * 1000U)
-#endif
+/** @brief Heartbeat overdue at 2x heartbeat interval (160s). */
+#define APP_HEARTBEAT_OVERDUE_INTERVAL_MS (160U * 1000U)
 
-/** @brief If watchdog is not fed at this interval or faster, reboot */
-#ifndef APP_WDT_INTERVAL_MS
-#   define APP_WDT_INTERVAL_MS (APP_HEARTBEAT_OVERDUE_INTERVAL_MS + (1U*60U*1000U))
-#endif
+/** @brief Watchdog: overdue + 60s = 220s. */
+#define APP_WDT_INTERVAL_MS (APP_HEARTBEAT_OVERDUE_INTERVAL_MS + (60U * 1000U))
 
 /** @brief Enable sensor tasks */
 #ifndef RT_SENSOR_ENABLED
@@ -323,7 +321,7 @@
 
 // ***** Flash storage constants *****/
 
-#define APP_FLASH_PAGES (16U) //!< 64 kB flash storage if page size is 4 kB.
+#define APP_FLASH_PAGES (45U) //!< 180 kB flash storage (expanded from 64 kB).
 #define APP_FLASH_LOG_DATA_RECORDS_NUM   (APP_FLASH_PAGES - 2U) //!< swap page + settings.
 
 // File constants can be any non-zero uint8.
@@ -349,7 +347,7 @@
 
 // ** Logging constants ** //
 #ifndef APP_LOG_INTERVAL_S
-#   define APP_LOG_INTERVAL_S (60U)  // 1分ごとにスナップショット保存
+#   define APP_LOG_INTERVAL_S (80U)  // 80秒ごとにスナップショット保存
 #endif
 #ifndef APP_LOG_OVERFLOW
 #   define APP_LOG_OVERFLOW (true)
@@ -513,7 +511,7 @@
 
 /** @brief Numeric firmware version transmitted in DF5 movement_counter field. */
 #ifndef APP_FW_VERSION_NUM
-#   define APP_FW_VERSION_NUM (87U)
+#   define APP_FW_VERSION_NUM (88U)
 #endif
 
 /** @brief Logs reserve lot of flash, enable only on debug builds */

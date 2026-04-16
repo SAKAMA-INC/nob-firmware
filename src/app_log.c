@@ -174,8 +174,9 @@ rd_status_t app_log_init (void)
         .overflow   = APP_LOG_OVERFLOW,
         .fields = {
             .datas.temperature_c = APP_LOG_TEMPERATURE_ENABLED,
-            .datas.humidity_rh = APP_LOG_HUMIDITY_ENABLED,
-            .datas.pressure_pa = APP_LOG_PRESSURE_ENABLED
+            .datas.acceleration_x_g = 1,
+            .datas.acceleration_y_g = 1,
+            .datas.acceleration_z_g = 1
         }
     };
 #   if APP_FLASH_LOG_CONFIG_NVM_ENABLED
@@ -222,8 +223,9 @@ rd_status_t app_log_process (const rd_sensor_data_t * const sample)
         {
             .timestamp_s = sample->timestamp_ms / 1000U,
             .temperature_c = rd_sensor_data_parse (sample, RD_SENSOR_TEMP_FIELD),
-            .humidity_rh = rd_sensor_data_parse (sample, RD_SENSOR_HUMI_FIELD),
-            .pressure_pa = rd_sensor_data_parse (sample, RD_SENSOR_PRES_FIELD),
+            .acceleration_x_g = rd_sensor_data_parse (sample, RD_SENSOR_ACC_X_FIELD),
+            .acceleration_y_g = rd_sensor_data_parse (sample, RD_SENSOR_ACC_Y_FIELD),
+            .acceleration_z_g = rd_sensor_data_parse (sample, RD_SENSOR_ACC_Z_FIELD),
         };
 
         if (APP_LOG_MAX_SAMPLES > m_log_input_block.num_samples)
@@ -344,8 +346,9 @@ static rd_status_t app_log_read_populate (rd_sensor_data_t * const sample,
     {
         const app_log_element_t * const p_el = &m_log_output_block.storage[p_rs->element_idx];
         rd_sensor_data_set (sample, RD_SENSOR_TEMP_FIELD, p_el->temperature_c);
-        rd_sensor_data_set (sample, RD_SENSOR_HUMI_FIELD, p_el->humidity_rh);
-        rd_sensor_data_set (sample, RD_SENSOR_PRES_FIELD, p_el->pressure_pa);
+        rd_sensor_data_set (sample, RD_SENSOR_ACC_X_FIELD, p_el->acceleration_x_g);
+        rd_sensor_data_set (sample, RD_SENSOR_ACC_Y_FIELD, p_el->acceleration_y_g);
+        rd_sensor_data_set (sample, RD_SENSOR_ACC_Z_FIELD, p_el->acceleration_z_g);
         sample->timestamp_ms = ( (uint64_t) (p_el->timestamp_s)) * 1000LLU;
         p_rs->element_idx++;
     }
