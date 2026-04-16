@@ -65,6 +65,11 @@ rt_sensor_ctx_t * m_sensors[SENSOR_COUNT]; //!< Sensor APIs.
 static uint64_t vdd_update_time;              //!< timestamp of VDD update.
 static uint32_t
 m_event_counter;              //!< Number of events registered in app_sensor.
+static uint32_t m_diag_bus_err = 0;
+static uint32_t m_diag_sensor_err[SENSOR_COUNT] = {0};
+static uint8_t  m_diag_spi_whoami = 0xEE;  //!< Raw SPI WHO_AM_I result
+static uint32_t m_diag_spi_err = 0;
+static uint8_t  m_diag_i2c_whoami = 0xEE; //!< I2C WHO_AM_I at 0x19
 
 /**
  * @brief Sensor operation, such as read or configure.
@@ -319,9 +324,53 @@ rd_status_t app_sensor_init (void)
 {
     rd_status_t err_code = RD_SUCCESS;
     m_sensors_init();
-    err_code |= app_sensor_buses_init();
+    rd_status_t bus_err = app_sensor_buses_init();
+    err_code |= bus_err;
+    m_diag_bus_err = bus_err;
 
-    if (RD_SUCCESS == err_code)
+    // Raw SPI diagnostic: read LIS2DH12 WHO_AM_I directly
+    if (0 == (bus_err & RD_ERROR_FATAL))
+    {
+        uint8_t reg_addr = 0x0F | 0x80; // WHO_AM_I with read bit
+        uint8_t whoami = 0xEE;
+        rd_status_t spi_err = RD_SUCCESS;
+        spi_err |= ri_gpio_write (RB_SPI_SS_ACCELEROMETER_PIN, RI_GPIO_LOW);
+        spi_err |= ri_spi_xfer_blocking (&reg_addr, 1, NULL, 0);
+        spi_err |= ri_spi_xfer_blocking (NULL, 0, &whoami, 1);
+        spi_err |= ri_gpio_write (RB_SPI_SS_ACCELEROMETER_PIN, RI_GPIO_HIGH);
+        m_diag_spi_whoami = whoami;
+        m_diag_spi_err = spi_err;
+
+        // Try I2C: LIS2DH12 may be wired in I2C mode (CS tied to VDD)
+        // Address 0x19 = SDO/SA0 high, 0x18 = SDO/SA0 low
+        uint8_t reg = 0x0F; // WHO_AM_I register
+        uint8_t i2c_val = 0xEE;
+        rd_status_t i2c_err;
+        i2c_err = ri_i2c_write_blocking (0x19, &reg, 1, false);
+
+        if (RD_SUCCESS == i2c_err)
+        {
+            i2c_err = ri_i2c_read_blocking (0x19, &i2c_val, 1);
+        }
+
+        if (RD_SUCCESS != i2c_err || i2c_val != 0x33)
+        {
+            // Try address 0x18
+            i2c_val = 0xEE;
+            i2c_err = ri_i2c_write_blocking (0x18, &reg, 1, false);
+
+            if (RD_SUCCESS == i2c_err)
+            {
+                i2c_err = ri_i2c_read_blocking (0x18, &i2c_val, 1);
+            }
+        }
+
+        m_diag_i2c_whoami = i2c_val;
+    }
+
+    // Allow sensor init even if a non-fatal bus error occurred
+    // (e.g. SPI fails but I2C sensors can still be initialised)
+    if (!(bus_err & RD_ERROR_FATAL))
     {
         app_sensor_rtc_init();
         // Wait for the power lines to settle after bus powerup.
@@ -348,6 +397,8 @@ rd_status_t app_sensor_init (void)
             } while ( (APP_SENSOR_SELFTEST_RETRIES > retries++)
 
                       && (RD_ERROR_SELFTEST == init_code));
+
+            m_diag_sensor_err[ii] = init_code;
 
             if (RD_SUCCESS == init_code)
             {
@@ -379,6 +430,31 @@ rd_status_t app_sensor_init (void)
     }
 
     return err_code;
+}
+
+uint32_t app_sensor_diag_bus_err (void)
+{
+    return m_diag_bus_err;
+}
+
+uint32_t app_sensor_diag_sensor_err (size_t index)
+{
+    return (index < SENSOR_COUNT) ? m_diag_sensor_err[index] : 0;
+}
+
+uint8_t app_sensor_diag_spi_whoami (void)
+{
+    return m_diag_spi_whoami;
+}
+
+uint32_t app_sensor_diag_spi_err (void)
+{
+    return m_diag_spi_err;
+}
+
+uint8_t app_sensor_diag_i2c_whoami (void)
+{
+    return m_diag_i2c_whoami;
 }
 
 rd_status_t app_sensor_uninit (void)

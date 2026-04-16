@@ -96,7 +96,7 @@ void setup (void)
     }
 
     rd_error_cb_set (&app_on_error);
-    RD_ERROR_CHECK (err_code, RD_SUCCESS);
+    RD_ERROR_CHECK (err_code, ~RD_ERROR_FATAL);
 }
 
 #ifdef  CEEDLING

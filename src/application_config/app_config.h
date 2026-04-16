@@ -1,5 +1,9 @@
 #ifndef APP_CONFIG_H
 #define APP_CONFIG_H
+
+/** @brief Send 1 advertisement per heartbeat for ~1.3s update interval. */
+#define APP_NUM_REPEATS 1
+
 #include "application_modes.h"
 #include "ruuvi_boards.h"
 #include "ruuvi_driver_sensor.h"
@@ -345,7 +349,7 @@
 
 // ** Logging constants ** //
 #ifndef APP_LOG_INTERVAL_S
-#   define APP_LOG_INTERVAL_S (5U * 60U)
+#   define APP_LOG_INTERVAL_S (60U)  // 1分ごとにスナップショット保存
 #endif
 #ifndef APP_LOG_OVERFLOW
 #   define APP_LOG_OVERFLOW (true)
@@ -505,6 +509,11 @@
 
 #ifndef APP_FW_NAME
 #   define APP_FW_NAME "Ruuvi FW"
+#endif
+
+/** @brief Numeric firmware version transmitted in DF5 movement_counter field. */
+#ifndef APP_FW_VERSION_NUM
+#   define APP_FW_VERSION_NUM (87U)
 #endif
 
 /** @brief Logs reserve lot of flash, enable only on debug builds */

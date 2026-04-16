@@ -449,6 +449,34 @@ void app_sensor_vdd_measure_isr (const ri_radio_activity_evt_t evt);
  */
 rd_status_t app_sensor_vdd_sample (void);
 
+/**
+ * @brief Get bus init error code for diagnostics.
+ * @return Error code from app_sensor_buses_init().
+ */
+uint32_t app_sensor_diag_bus_err (void);
+
+/**
+ * @brief Get individual sensor init error code for diagnostics.
+ * @param[in] index Sensor index (e.g. SHTCX_INDEX, LIS2DH12_INDEX).
+ * @return Error code from rt_sensor_initialize() for given sensor.
+ */
+uint32_t app_sensor_diag_sensor_err (size_t index);
+
+/**
+ * @brief Get raw SPI WHO_AM_I byte (0x33 = LIS2DH12 OK, 0xFF = no response).
+ */
+uint8_t app_sensor_diag_spi_whoami (void);
+
+/**
+ * @brief Get SPI transfer error code from raw WHO_AM_I read.
+ */
+uint32_t app_sensor_diag_spi_err (void);
+
+/**
+ * @brief Get I2C WHO_AM_I byte (0x33 = LIS2DH12 found on I2C bus).
+ */
+uint8_t app_sensor_diag_i2c_whoami (void);
+
 #ifdef RUUVI_RUN_TESTS
 void app_sensor_ctx_get (rt_sensor_ctx_t *** m_sensors, size_t * num_sensors);
 #endif

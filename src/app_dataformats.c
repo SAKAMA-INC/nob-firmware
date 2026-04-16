@@ -105,9 +105,21 @@ encode_to_5 (uint8_t * const output,
     ep_data.humidity_rh       = rd_sensor_data_parse (data, RD_SENSOR_HUMI_FIELD);
     ep_data.pressure_pa       = rd_sensor_data_parse (data, RD_SENSOR_PRES_FIELD);
     ep_data.temperature_c     = rd_sensor_data_parse (data, RD_SENSOR_TEMP_FIELD);
+
+    // Diagnostic: when acceleration is invalid, encode init error codes
+    // accel_x = bus_err, accel_y = SPI WHO_AM_I, accel_z = I2C WHO_AM_I
+    if (isnan (ep_data.accelerationx_g))
+    {
+        ep_data.accelerationx_g = (float) (app_sensor_diag_bus_err() & 0x7FFF)
+                                  / 1000.0f;
+        ep_data.accelerationy_g = (float) (app_sensor_diag_spi_whoami())
+                                  / 1000.0f;
+        ep_data.accelerationz_g = (float) (app_sensor_diag_i2c_whoami())
+                                  / 1000.0f;
+    }
+
     ep_data.measurement_count = ep_5_measurement_count;
-    uint8_t mvtctr = (uint8_t) (app_sensor_event_count_get() % (RE_5_MVTCTR_MAX + 1));
-    ep_data.movement_count    = mvtctr;
+    ep_data.movement_count    = APP_FW_VERSION_NUM;
     err_code |= ri_radio_address_get (&ep_data.address);
     err_code |= ri_adv_tx_power_get (&ep_data.tx_power);
     err_code |= rt_adc_vdd_get (&ep_data.battery_v);
