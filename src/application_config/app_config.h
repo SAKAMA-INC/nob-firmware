@@ -1,7 +1,7 @@
 #ifndef APP_CONFIG_H
 #define APP_CONFIG_H
 
-/** @brief v88: 80-second heartbeat for history-log sampling. */
+/** @brief v89: RE_ENV_ALL に加速度フィールドを追加。 */
 #define APP_NUM_REPEATS 2
 #define APP_HEARTBEAT_INTERVAL_MS (80U * 1000U)
 
@@ -511,7 +511,7 @@
 
 /** @brief Numeric firmware version transmitted in DF5 movement_counter field. */
 #ifndef APP_FW_VERSION_NUM
-#   define APP_FW_VERSION_NUM (88U)
+#   define APP_FW_VERSION_NUM (89U)
 #endif
 
 /** @brief Logs reserve lot of flash, enable only on debug builds */

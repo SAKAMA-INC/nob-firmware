@@ -631,6 +631,9 @@ static rd_sensor_data_fields_t re2rd_fields (const re_type_t type)
             fields.datas.humidity_rh = 1;
             fields.datas.pressure_pa = 1;
             fields.datas.temperature_c = 1;
+            fields.datas.acceleration_x_g = 1;
+            fields.datas.acceleration_y_g = 1;
+            fields.datas.acceleration_z_g = 1;
             break;
 
         case RE_ENV_HUMI:
