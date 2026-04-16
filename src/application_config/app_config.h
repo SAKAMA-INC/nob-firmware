@@ -321,7 +321,7 @@
 
 // ***** Flash storage constants *****/
 
-#define APP_FLASH_PAGES (45U) //!< 180 kB flash storage (expanded from 64 kB).
+#define APP_FLASH_PAGES (44U) //!< 176 kB flash storage. FDS needs +1 page for GC, total 45 pages.
 #define APP_FLASH_LOG_DATA_RECORDS_NUM   (APP_FLASH_PAGES - 2U) //!< swap page + settings.
 
 // File constants can be any non-zero uint8.
