@@ -39,7 +39,7 @@
 
 /** @brief Set to long enough to handle existing queue, then as short as possible. */
 #define BLOCKING_COMM_TIMEOUT_MS (4000U)
-#define CONN_PARAM_UPDATE_DELAY_MS (30U * 1000U) //!< Delay before switching to faster conn params in long ops.
+#define CONN_PARAM_UPDATE_DELAY_MS (0U) //!< Switch to TURBO immediately on GATT data.
 
 #if APP_COMMS_BIDIR_ENABLED
 TESTABLE_STATIC bool
@@ -313,8 +313,12 @@ TESTABLE_STATIC void handle_comms (const ri_comm_xfer_fp_t reply_fp, void * p_da
                 break;
         }
 
-        // Switch GATT to slower params.
-        err_code |= ri_gatt_params_request (RI_GATT_LOW_POWER, 0);
+        // v90.7: LOW_POWER 切替を削除。
+        // 理由: max_interval 1980ms × 3 = 5940ms が supervision_timeout 6000ms に
+        // 余裕 60ms しかなく、iOS が安全マージン解釈で接続切断を誘発し、
+        // その後の広告再開が失敗する症状を引き起こす。TURBO のまま iOS 側から
+        // 切断させた方が再初期化シーケンスが安定する。
+        // err_code |= ri_gatt_params_request (RI_GATT_LOW_POWER, 0);
         // Resume heartbeat processing.
         err_code |= app_heartbeat_start();
     }
@@ -359,6 +363,8 @@ TESTABLE_STATIC void handle_gatt_data (void * p_data, uint16_t data_len)
 TESTABLE_STATIC void handle_gatt_connected (void * p_data, uint16_t data_len)
 {
     rd_status_t err_code = RD_SUCCESS;
+    // v93: stop continuous_adv during GATT connection
+    err_code |= app_heartbeat_continuous_adv_stop ();
     // Disables advertising for GATT, does not kick current connetion out.
     err_code |= rt_gatt_adv_disable ();
     RD_ERROR_CHECK (err_code, RD_SUCCESS);
@@ -384,6 +390,8 @@ TESTABLE_STATIC void handle_gatt_disconnected (void * p_data, uint16_t data_len)
 {
     rd_status_t err_code = RD_SUCCESS;
     config_cleanup_on_disconnect();
+    // v93: restart continuous_adv after GATT disconnection
+    err_code |= app_heartbeat_continuous_adv_start ();
     RD_ERROR_CHECK (err_code, RD_SUCCESS);
 }
 
@@ -565,6 +573,8 @@ TESTABLE_STATIC void comm_mode_change_isr (void * const p_context)
     {
         app_comms_bleadv_send_count_set (APP_NUM_REPEATS);
         ri_adv_tx_interval_set (APP_BLE_INTERVAL_MS);
+        // v93: start continuous_adv after switching to normal mode
+        app_heartbeat_continuous_adv_start ();
         p_change->switch_to_normal = 0;
     }
 

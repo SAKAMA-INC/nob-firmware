@@ -120,6 +120,7 @@ static rd_status_t store_block (const app_log_record_t * const p_record)
 }
 
 
+#if 0 // v90.6: purge_logs disabled — preserve log data across OTA
 static rd_status_t purge_logs (void)
 {
     rd_status_t err_code = RD_SUCCESS;
@@ -140,6 +141,7 @@ static rd_status_t purge_logs (void)
     err_code |= rt_flash_gc_run ();
     return err_code;
 }
+#endif
 
 #ifndef CEEDLING
 static
@@ -195,7 +197,8 @@ rd_status_t app_log_init (void)
     if (RD_SUCCESS == err_code) //-V547
     {
         memcpy (&m_log_config, &config, sizeof (config));
-        err_code |= purge_logs();
+        // v90.6: do not purge logs on boot — preserve data across OTA
+        // err_code |= purge_logs();
     }
 
     err_code |= app_log_read_boot_count();

@@ -26,6 +26,8 @@
 #include "ruuvi_task_gatt.h"
 #include "ruuvi_task_nfc.h"
 
+#include <string.h>
+
 #define U8_MASK (0xFFU)
 #define APP_DF_3_ENABLED 0
 #define APP_DF_5_ENABLED 1
@@ -33,10 +35,16 @@
 #define APP_DF_FA_ENABLED 0
 
 static ri_timer_id_t heart_timer; //!< Timer for updating data.
+static ri_timer_id_t m_cont_adv_timer; //!< Timer for continuous advertising.
 
 static uint64_t last_heartbeat_timestamp_ms; //!< Timestamp for heartbeat refresh.
 
 static app_dataformat_t m_dataformat_state; //!< State of heartbeat.
+
+static ri_comm_message_t m_adv_msg; //!< Shared buffer: latest DF5 payload for continuous advertising.
+static bool m_adv_msg_valid = false; //!< True after first heartbeat populates m_adv_msg.
+static bool m_cont_adv_running = false; //!< True while continuous advertising timer is active.
+static uint32_t m_cont_adv_fail_count = 0; //!< Consecutive send failures for diagnostics.
 
 static app_dataformats_t m_dataformats_enabled =
 {
@@ -96,6 +104,8 @@ void heartbeat (void * p_event, uint16_t event_size)
     m_dataformat_state = app_dataformat_next (m_dataformats_enabled, m_dataformat_state);
     app_dataformat_encode (msg.data, &buffer_len, &data, m_dataformat_state);
     msg.data_length = (uint8_t) buffer_len;
+    memcpy (&m_adv_msg, &msg, sizeof (ri_comm_message_t));
+    m_adv_msg_valid = true;
     err_code = send_adv (&msg);
     // Advertising should always be successful
     RD_ERROR_CHECK (err_code, ~RD_ERROR_FATAL);
@@ -150,6 +160,62 @@ void schedule_heartbeat_isr (void * const p_context)
     ri_scheduler_event_put (NULL, 0U, &heartbeat);
 }
 
+// v93: continuous_adv ISR re-enabled for 1Hz continuous advertising
+static void continuous_adv_isr (void * const p_context)
+{
+    if (m_adv_msg_valid)
+    {
+        ri_comm_message_t msg;
+        memcpy (&msg, &m_adv_msg, sizeof (ri_comm_message_t));
+        msg.repeat_count = 1;
+        rd_status_t err_code = rt_adv_send_data (&msg);
+
+        if (RD_SUCCESS != err_code)
+        {
+            m_cont_adv_fail_count++;
+        }
+        else
+        {
+            m_cont_adv_fail_count = 0;
+        }
+    }
+}
+
+rd_status_t app_heartbeat_continuous_adv_start (void)
+{
+    rd_status_t err_code = RD_SUCCESS;
+
+    if (NULL == m_cont_adv_timer)
+    {
+        err_code |= RD_ERROR_INVALID_STATE;
+    }
+    else if (!m_cont_adv_running)
+    {
+        err_code |= ri_timer_start (m_cont_adv_timer,
+                                    APP_CONTINUOUS_ADV_INTERVAL_MS, NULL);
+        m_cont_adv_running = (RD_SUCCESS == err_code);
+    }
+
+    return err_code;
+}
+
+rd_status_t app_heartbeat_continuous_adv_stop (void)
+{
+    rd_status_t err_code = RD_SUCCESS;
+
+    if (NULL == m_cont_adv_timer)
+    {
+        err_code |= RD_ERROR_INVALID_STATE;
+    }
+    else if (m_cont_adv_running)
+    {
+        err_code |= ri_timer_stop (m_cont_adv_timer);
+        m_cont_adv_running = false;
+    }
+
+    return err_code;
+}
+
 rd_status_t app_heartbeat_init (void)
 {
     rd_status_t err_code = RD_SUCCESS;
@@ -162,6 +228,9 @@ rd_status_t app_heartbeat_init (void)
     {
         err_code |= ri_timer_create (&heart_timer, RI_TIMER_MODE_REPEATED,
                                      &schedule_heartbeat_isr);
+        // v93: continuous_adv timer re-enabled
+        err_code |= ri_timer_create (&m_cont_adv_timer, RI_TIMER_MODE_REPEATED,
+                                     &continuous_adv_isr);
 
         if (RD_SUCCESS == err_code)
         {
@@ -209,6 +278,11 @@ bool app_heartbeat_overdue (void)
 {
     return ri_rtc_millis() > (last_heartbeat_timestamp_ms +
                               APP_HEARTBEAT_OVERDUE_INTERVAL_MS);
+}
+
+uint32_t app_heartbeat_continuous_adv_fail_count (void)
+{
+    return m_cont_adv_fail_count;
 }
 
 #ifdef CEEDLING

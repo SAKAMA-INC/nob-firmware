@@ -321,7 +321,7 @@
 
 // ***** Flash storage constants *****/
 
-#define APP_FLASH_PAGES (44U) //!< 176 kB flash storage. FDS needs +1 page for GC, total 45 pages.
+#define APP_FLASH_PAGES (45U) //!< v93: 180 kB flash storage. FDS needs +1 page for GC, total 46 pages. v88-compatible.
 #define APP_FLASH_LOG_DATA_RECORDS_NUM   (APP_FLASH_PAGES - 2U) //!< swap page + settings.
 
 // File constants can be any non-zero uint8.
@@ -345,9 +345,15 @@
 #define APP_FLASH_LOG_DATA_RECORD_PREFIX  (0xF0U) //!< Prefix, append with U8 number
 
 
+// ** Continuous advertising interval (ms) ** //
+#ifndef APP_CONTINUOUS_ADV_INTERVAL_MS
+#   define APP_CONTINUOUS_ADV_INTERVAL_MS (1000U)
+#endif
+
 // ** Logging constants ** //
+// v90.8: 月1回同期運用、保持期間60日。iOS SyncConstants.sampleIntervalSeconds=600 と整合。
 #ifndef APP_LOG_INTERVAL_S
-#   define APP_LOG_INTERVAL_S (80U)  // 80秒ごとにスナップショット保存
+#   define APP_LOG_INTERVAL_S (600U)
 #endif
 #ifndef APP_LOG_OVERFLOW
 #   define APP_LOG_OVERFLOW (true)
@@ -511,7 +517,7 @@
 
 /** @brief Numeric firmware version transmitted in DF5 movement_counter field. */
 #ifndef APP_FW_VERSION_NUM
-#   define APP_FW_VERSION_NUM (89U)
+#   define APP_FW_VERSION_NUM (93U)
 #endif
 
 /** @brief Logs reserve lot of flash, enable only on debug builds */

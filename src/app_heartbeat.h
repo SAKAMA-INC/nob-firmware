@@ -65,6 +65,30 @@ rd_status_t app_heartbeat_stop (void);
  */
 bool app_heartbeat_overdue (void);
 
+/**
+ * @brief Start continuous advertising at 1 s intervals using the latest DF5 payload.
+ *
+ * @retval RD_SUCCESS on success.
+ * @retval RD_ERROR_INVALID_STATE if heartbeat is not initialized.
+ */
+rd_status_t app_heartbeat_continuous_adv_start (void);
+
+/**
+ * @brief Stop continuous advertising.
+ *
+ * @retval RD_SUCCESS on success.
+ * @retval RD_ERROR_INVALID_STATE if heartbeat is not initialized.
+ */
+rd_status_t app_heartbeat_continuous_adv_stop (void);
+
+/**
+ * @brief Get consecutive failure count of continuous advertising sends.
+ *
+ * Resets to 0 on each successful send.
+ *
+ * @return Number of consecutive failures since last success.
+ */
+uint32_t app_heartbeat_continuous_adv_fail_count (void);
 
 #ifdef CEEDLING
 #include "ruuvi_interface_timer.h"
