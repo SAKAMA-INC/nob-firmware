@@ -11,11 +11,20 @@ on:
     branches: [ master ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# テスト/静的検査のみでキャンセルしても副作用がないため、後発の実行を優先して
+# 先行分はキャンセルする。
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # This workflow contains a single job called "unit-test"
   unit-test:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    # 8月の実行実績が無く実測が取れないため、指示書 A-3 の目安値（unit test = 15分）を採用。
+    # 既定の360分のままだと、ハング1回で360分を消費する。
+    timeout-minutes: 15
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
