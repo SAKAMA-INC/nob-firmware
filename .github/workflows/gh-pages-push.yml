@@ -9,11 +9,21 @@ on:
     branches: [ master ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# 外部への書き込みを伴うため、途中キャンセルは行わない。
+# キューイングのみ行い、同時実行を防ぐ。
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   # This workflow contains a single job called "build"
   doxygen:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    # gh-pages ブランチへ生成物を push するため、concurrency は cancel-in-progress: false。
+    # 8月の実行実績が無く実測が取れないため、指示書 A-3 の目安値（build / deploy = 20分）を採用。
+    # 既定の360分のままだと、ハング1回で360分を消費する。
+    timeout-minutes: 20
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
